@@ -1,0 +1,53 @@
+# nombre del flujo de trabajo
+name: CI/CD Pipeline carvajalvalverde
+
+# especifica que cuando se haga un push o un pull request en la rama main se ejecutaran los trabajos
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+# Trabajos que se ejecutaran cuando se haga un push
+jobs:
+# Job Test
+  test:
+  # Especificamos la maquina en la que se ejecutara el trabajo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+      # usamos el action checkout para clonar el repo en la maquin
+        uses: actions/checkout@v3
+      # probamos que la imagen se construya correctamente antes de pasar al siguiente trabajo
+      - name: Build Docker Image for Testing
+        run: |
+          docker build -t carvajalvalverde:test .
+# Job Build and deploy
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    # depende del trabajo test, solo se ejecuta si se completa el trabajo test con exito
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        # clonamos el repo en la maquina y procedemos a desplegarlo
+      - name: Deploy to Server
+      # Usamos secrets de github los cuales tenemos que configurar
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+          # sincronizamos archivos y directorios entre servidor y el repo haciendo uso de la clave privada 
+          # Finalmente paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          rsync -avz -e "ssh -p $SSH_PORT -i private_key -o StrictHostKeyChecking=no" . ${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}
+
+          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && sudo chown -R www-data:www-data /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache && sudo chmod -R 775 /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache"
+
+          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde . && ./carvajalvalverde.sh 5"
+
