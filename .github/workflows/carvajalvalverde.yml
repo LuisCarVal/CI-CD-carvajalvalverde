@@ -41,19 +41,18 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
           # sincronizamos archivos y directorios entre servidor y el repo haciendo uso de la clave privada 
+          # Finalmente paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key
           chmod 600 private_key
           rsync -avz -e "ssh -p $SSH_PORT -i private_key -o StrictHostKeyChecking=no" . ${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}
 
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && sudo chown -R www-data:www-data /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache && sudo chmod -R 775 /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache"
-          # Finalmente paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
+
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde . && ./carvajalvalverde.sh 5"
-          # Configurar Cron Job para ejecutar scripts cada 5 minutos
+          
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "
-            # Añadir tarea al crontab (sin duplicados)
             (crontab -l | grep -v 'carvajalvalverde'; echo '*/5 * * * * cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && ./carvajalvalverde.sh 5') | crontab -
-            # Asegurar permisos de ejecución en los scripts
             chmod +x ${REMOTE_PATH}/carvajalvalverde-parada.sh
             chmod +x ${REMOTE_PATH}/carvajalvalverde.sh
           "
