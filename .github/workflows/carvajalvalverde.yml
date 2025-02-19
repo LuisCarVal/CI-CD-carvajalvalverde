@@ -50,6 +50,4 @@ jobs:
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && sudo chown -R www-data:www-data /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache && sudo chmod -R 775 /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache"
 
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde . && ./carvajalvalverde.sh 5"
-          
-          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "echo '*/5 * * * * cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && ./carvajalvalverde.sh 5' | sudo tee -a /etc/crontab"
 
