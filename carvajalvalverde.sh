@@ -36,7 +36,9 @@ frontend myfrontend
 backend webservers
 EOF
 
-echo "Creando archivo haproxy.cfg con $NUM_NODES nodos..."
+echo "Creando archivo haproxy.cfg con $NUM_NODES nodos..."ç
+
+docker volume create carvajalvalverde
 
 for i in $(seq 1 $NUM_NODES); do
   PORT=$((BASE_PORT + i - 1))
@@ -47,7 +49,7 @@ for i in $(seq 1 $NUM_NODES); do
     -e PORT=$PORT \
     -e CONTAINER_NAME=$CONTAINER_NAME \
     -p $PORT:80 \
-    -v .:/var/www/html/carvajalvalverde \
+    -v carvajalvalverde:/var/www/html/carvajalvalverde \
     $IMAGE_NAME
 
   echo "  server $CONTAINER_NAME 130.61.90.52:$PORT check" >> $HAPROXY_CFG
