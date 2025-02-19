@@ -51,9 +51,5 @@ jobs:
 
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde . && ./carvajalvalverde.sh 5"
           
-          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "
-            (crontab -l | grep -v 'carvajalvalverde'; echo '*/5 * * * * cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && ./carvajalvalverde.sh 5') | crontab -
-            chmod +x ${REMOTE_PATH}/carvajalvalverde-parada.sh
-            chmod +x ${REMOTE_PATH}/carvajalvalverde.sh
-          "
+          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "echo '*/5 * * * * cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && ./carvajalvalverde.sh 5' | sudo tee -a /etc/crontab"
 
