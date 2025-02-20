@@ -35,13 +35,12 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          REMOTE_PATH: paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
+          REMOTE_PATH: ${{secrets.REMOTE_PATH}}
         run: |
-          echo "${SSH_PRIVATE_KEY}" > private_key
+          echo "$SSH_PRIVATE_KEY" > private_key
           chmod 600 private_key
           rsync -avz -e "ssh -p $SSH_PORT -i private_key -o StrictHostKeyChecking=no" . ${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}
-
+          
           ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && sudo chown -R www-data:www-data /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache && sudo chmod -R 775 /var/www/html/carvajalvalverde/storage /var/www/html/carvajalvalverde/bootstrap/cache"
 
-          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde . && ./carvajalvalverde.sh 5"
-
+          ssh -p $SSH_PORT -i private_key ${SSH_USER}@${SSH_HOST} "cd ${REMOTE_PATH} && ./carvajalvalverde-parada.sh 5 && sudo docker image rm carvajalvalverde && sudo docker build -t carvajalvalverde .  && ./carvajalvalverde.sh 5"
