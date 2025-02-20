@@ -19,10 +19,7 @@ jobs:
       - name: Checkout code
       # usamos el action checkout para clonar el repo en la maquin
         uses: actions/checkout@v3
-      # probamos que la imagen se construya correctamente antes de pasar al siguiente trabajo
-      - name: Build Docker Image for Testing
-        run: |
-          docker build -t carvajalvalverde:test .
+
 # Job Build and deploy
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -39,11 +36,11 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
-          # sincronizamos archivos y directorios entre servidor y el repo haciendo uso de la clave privada 
-          # Finalmente paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
+          REMOTE_PATH: paramos los posibles contenedores que haya activos, construimos la imagen de nuevo y levantamos contenedores
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key
+          echo "$SSH_PRIVATE${{ secrets.REMOTE_PATH }}
+          # sincronizamos archivos y directorios entre servidor y el repo haciendo uso de la clave privada 
+          # Finalmente _KEY" > private_key
           chmod 600 private_key
           rsync -avz -e "ssh -p $SSH_PORT -i private_key -o StrictHostKeyChecking=no" . ${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}
 
