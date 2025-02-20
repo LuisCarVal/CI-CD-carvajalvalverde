@@ -10,9 +10,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Build Docker Image for Testing
-        run: |
-          docker build -t carvajalvalverde:test .
           
   build_and_deploy:
     runs-on: ubuntu-latest
